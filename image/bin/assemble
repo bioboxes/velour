@@ -4,12 +4,16 @@ set -o errexit
 set -o nounset
 set -o xtrace
 
-READS=$(biobox_args.sh 'select(has("fastq")) | .fastq | map(.value) | join(" ")')
+READS=$(biobox_args.sh 'select(has("fastq")) | .fastq | map("-short \(.value)") | join(" ")')
 FLAGS=$(fetch_task_from_taskfile.sh ${TASKFILE} $1)
 
 export TMP_DIR=/tmp/velour-assembly
+export eval ${FLAGS}
 
-eval /usr/local/velour/assemble.sh ${TMP_DIR} ${FLAGS} ${READS}
+export PARTS=4
+export CUTOFF=2
+
+/usr/local/velour/assemble.sh ${TMP_DIR} ${KMER} ${PARTITIONS} ${PARTS} ${CUTOFF} ${READS}
 
 cp ${TMP_DIR}/contigs.fa ${OUTPUT}
 
