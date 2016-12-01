@@ -1,6 +1,0 @@
-default: assemble_modified.sh ${TMP_DIR} 31 256 4 2.0 ${READS}
-k31c2_0: assemble_modified.sh ${TMP_DIR} 31 256 4 2.0 ${READS}
-k31c4_01: assemble_modified.sh ${TMP_DIR} 31 256 4 4.01 ${READS}
-k31c20_01: assemble_modified.sh ${TMP_DIR} 31 256 4 20.01 ${READS}
-k63c2_0: assemble_modified.sh ${TMP_DIR} 63 256 4 2.0 ${READS}
-k63c4_01: assemble_modified.sh ${TMP_DIR} 63 256 4 4.01 ${READS}

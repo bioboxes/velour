@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o xtrace
+
+READS=$(biobox_args.sh 'select(has("fastq")) | .fastq | map(.value) | join(" ")')
+FLAGS=$(fetch_task_from_taskfile.sh ${TASKFILE} $1)
+
+export TMP_DIR=/tmp/velour-assembly
+
+eval /usr/local/velour/assemble.sh ${TMP_DIR} ${FLAGS} ${READS}
+
+cp ${TMP_DIR}/contigs.fa ${OUTPUT}
+
+# This command writes yaml into the biobox.yaml until the EOF symbol is reached
+cat << EOF > ${OUTPUT}/biobox.yaml
+version: 0.9.0
+arguments:
+  - fasta:
+    - id: velour_contigs_1
+      value: contigs.fa
+      type: contigs
+EOF

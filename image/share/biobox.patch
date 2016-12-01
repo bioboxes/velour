@@ -1,0 +1,80 @@
+diff --git a/Makefile b/Makefile
+index 90475ef..8f0bca7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -38,16 +38,7 @@ COMPILER=gnu
+ #### END OPTIONS
+ ####
+ 
+-OSNAME=$(shell uname -s)
+-ifeq ($(OSNAME),Darwin)
+-  ifeq ($(shell sysctl -n hw.optional.x86_64),1)
+-    ARCH=$(shell if [ "`sysctl -n hw.memsize`" -gt 4294967296 ] ; then echo x86_64 ; else echo i386 ; fi)
+-  else
+-    ARCH=i386
+-  endif
+-else
+-  ARCH=$(shell uname -p)
+-endif
++ARCH=x86_64
+ 
+ ifndef CXX_OVERRIDE
+   ifeq ($(COMPILER),gnu)
+diff --git a/assemble.sh b/assemble.sh
+index a468d82..0b8abc6 100755
+--- a/assemble.sh
++++ b/assemble.sh
+@@ -30,10 +30,10 @@ set -o errexit
+ set -o nounset
+ 
+ set +o nounset
+-if [[ -n "$1" ]] && [[ -n "$2" ]] && [[ -n "$3" ]] && [[ -n "$4" ]] && [[ -n "$5" ]] ; then
++if [[ -n "$1" ]] && [[ -n "$2" ]] && [[ -n "$3" ]] && [[ -n "$4" ]] && [[ -n "$5" ]] && [[ -n "$6" ]] ; then
+   true
+ else
+-    echo "Usage: assemble.sh outputDir oddKmerLength numParts gigabytesMemory fastaFiles" >&2
++    echo "Usage: assemble.sh outputDir oddKmerLength numParts gigabytesMemory cutoff fastaFiles" >&2
+     exit 1
+ fi
+ set -o nounset
+@@ -42,6 +42,8 @@ WORK=$1
+ FULLK=$2
+ VELOUR_PARTS=$3
+ VELOUR_MEMORY=$4
++CUTOFF=$5
++shift
+ shift
+ shift
+ shift
+@@ -209,8 +211,8 @@ for ((p=$START_INDEX; p <=$VELOUR_PARTITIONS; p++)) ; do
+   fi
+ done
+ 
+-echo "VELOUR: Executing initial single-end assembly with coverage cutoff = 1.0"
+-sh "$VELOUR_ROOT/covcutoff.sh" $WORK $FULLK $VELOUR_PARTITIONS $VELOUR_MEMORY 1.0
++echo "VELOUR: Executing initial single-end assembly with coverage cutoff = $CUTOFF"
++"$VELOUR_ROOT/covcutoff.sh" $WORK $FULLK $VELOUR_PARTITIONS $VELOUR_MEMORY $CUTOFF
+ 
+ #TODO: move this to a cleaning script?
+ # finishing success.  delete final buckets.
+diff --git a/covcutoff.sh b/covcutoff.sh
+index d627089..bfdf27b 100755
+--- a/covcutoff.sh
++++ b/covcutoff.sh
+@@ -112,15 +112,12 @@ fi
+ 
+ if [ "$UNITY_CUTOFF" = "0" ] ; then
+   echo "VELOUR: Converting PreGraph.wcov to contigs_$COV_CUTOFF.fa..."
+-  cat "$WORK/work/PreGraph.wcov" | sed '1d' | sed 's/NODE/>NOD/g' | sed 's/[\t]/_/g' > "$WORK/contigs_$COV_CUTOFF.fa"
++  cat "$WORK/work/PreGraph.wcov" | sed '1d' | sed 's/NODE/>NOD/g' | sed 's/[\t]/_/g' > "$WORK/contigs.fa"
+ 
+   # strip the coverage information to produce a Velvet-compatible format
+   #echo "VELOUR: Producing Velvet-compatible PreGraph file..."
+   #cat "$WORK/work/PreGraph.wcov" | sed 's/\(^NODE\t[0-9]\+\t[0-9]\+\).*/\1/g' > "$WORK/PreGraph"
+   #rm "$WORK/work/PreGraph.wcov"
+-
+-  echo "VELOUR: Computing single-end assembly statistics, min contig length of 100..."
+-  $VELOUR_ROOT/contig_stats.pl -k $FULLK -m 100 "$WORK/contigs_$COV_CUTOFF.fa"
+ fi
+ 
+ echo "VELOUR: DONE covcutoff.sh"
