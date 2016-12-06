@@ -24,8 +24,8 @@ fetch https://github.com/jjcook/velour/archive/${RELEASE}.tar.gz velour
 
 cd /usr/local/velour
 cat /usr/local//share/biobox.patch | patch -p1
-make 'MAXKMERLENGTH=121'
-ls velour_minikmer_ptables*.tar.bz2 | xargs -n 1 tar xjvf && make 'MAXKMERLENGTH=121'
+make 'MAXKMERLENGTH=63'
+ls velour_minikmer_ptables*.tar.bz2 | xargs -n 1 tar xjvf
 ls | egrep -v 'velour|minikmer|.sh' | xargs rm -r
 rm *.tar.bz2
 

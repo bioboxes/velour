@@ -19,10 +19,10 @@ gunzip --keep --stdout ${INPUTS} \
 export TMP_DIR=/tmp/velour-assembly
 export eval ${FLAGS}
 
-export PARTS=4
-export CUTOFF=2
+export VELOUR_MEMORY=4
+export PARTITIONS=256
 
-/usr/local/velour/assemble.sh ${TMP_DIR} ${KMER} ${PARTITIONS} ${PARTS} ${CUTOFF} ${READS}
+/usr/local/velour/assemble.sh ${TMP_DIR} ${KMER} ${PARTITIONS} ${VELOUR_MEMORY} ${CUTOFF} ${READS}
 
 cp ${TMP_DIR}/contigs.fa ${OUTPUT}
 rm ${READS}
