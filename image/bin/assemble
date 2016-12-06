@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -o errexit
+set -o nounset
+set -o xtrace
+
+FLAGS=$(fetch_task_from_taskfile.sh ${TASKFILE} $1)
+INPUTS=$(biobox_args.sh 'select(has("fastq")) | .fastq | map(.value) | join(" ")')
+READS=$(mktemp -d)/reads.fq
+
+# Convert FASTQ to FASTA
+# https://www.biostars.org/p/85929/#187385
+gunzip --keep --stdout ${INPUTS} \
+  | paste - - - - \
+  | cut -f 1,2 \
+  | sed 's/^/>/' \
+  | tr "\t" "\n" > ${READS}
+
+export TMP_DIR=/tmp/velour-assembly
+export eval ${FLAGS}
+
+export PARTS=4
+export CUTOFF=2
+
+/usr/local/velour/assemble.sh ${TMP_DIR} ${KMER} ${PARTITIONS} ${PARTS} ${CUTOFF} ${READS}
+
+cp ${TMP_DIR}/contigs.fa ${OUTPUT}
+rm ${READS}
+
+# This command writes yaml into the biobox.yaml until the EOF symbol is reached
+cat << EOF > ${OUTPUT}/biobox.yaml
+version: 0.9.0
+arguments:
+  - fasta:
+    - id: velour_contigs_1
+      value: contigs.fa
+      type: contigs
+EOF
